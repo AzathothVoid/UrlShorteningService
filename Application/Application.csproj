@@ -9,8 +9,6 @@
   <ItemGroup>
     <Folder Include="Contracts\Infrastructure\" />
     <Folder Include="Features\URLTokens\Handlers\Command\" />
-    <Folder Include="Features\URLTokens\Handlers\Query\" />
-    <Folder Include="Features\URLTokens\Requests\Command\" />
   </ItemGroup>
 
   <ItemGroup>
