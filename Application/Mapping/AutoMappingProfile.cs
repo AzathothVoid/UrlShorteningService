@@ -13,9 +13,9 @@ namespace Application.Mapping
     {
         public AutoMappingProfile()
         {
-            CreateMap<URlToken, URLTokenDto>().ReverseMap();
-            CreateMap<URlToken, CreateURLTokenDto>().ReverseMap();
-            CreateMap<URlToken, UpdateURLTokenDto>().ReverseMap();
+            CreateMap<URLToken, URLTokenDto>().ReverseMap();
+            CreateMap<URLToken, CreateURLTokenDto>().ReverseMap();
+            CreateMap<URLToken, UpdateURLTokenDto>().ReverseMap();
         }
     }
 }

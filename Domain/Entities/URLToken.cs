@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class URlToken : AuditableBaseEntity
+    public class URLToken : AuditableBaseEntity
     {
         public string Token { get; set; } = null!; 
         public string OriginalUrl { get; set; } = null!;

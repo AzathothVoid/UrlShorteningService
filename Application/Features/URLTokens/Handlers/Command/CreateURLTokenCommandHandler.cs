@@ -40,7 +40,7 @@ namespace Application.Features.URLTokens.Handlers.Command
                 return response;
             }
 
-            var urlToken = _mapper.Map<URlToken>(request.UrlTokenDto);
+            var urlToken = _mapper.Map<URLToken>(request.UrlTokenDto);
 
             urlToken = await _urlTokenRepository.AddAsync(urlToken);
 

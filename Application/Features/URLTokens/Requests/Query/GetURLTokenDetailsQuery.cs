@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.URLTokens.Requests.Query
 {
-    public class GetURLTokenDetailsQuery : IRequest<CustomQueryResponse<IURLTokenDto>>
+    public class GetURLTokenDetailsQuery : IRequest<CustomQueryResponse<URLTokenDto>>
     {
         public int Id { get; set; }
         }

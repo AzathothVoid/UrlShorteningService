@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Application.Contracts.Persistence
 {
-    public interface IURLTokenRepository : IRepository<URlToken>
+    public interface IURLTokenRepository : IRepository<URLToken>
     {
-        Task<URlToken?> GetByTokenAsync(string token);
+        Task<URLToken?> GetByTokenAsync(string token);
         Task<bool> IsTokenUniqueAsync(string token);
-        Task<bool> IsUrlValid(URlToken urlToken);
+        Task<bool> IsUrlValid(URLToken urlToken);
     }
 }
