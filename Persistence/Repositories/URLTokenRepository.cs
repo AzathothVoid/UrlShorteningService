@@ -2,19 +2,14 @@
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Repositories.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Persistence.Repositories
 {
     public class URLTokenRepository : Repository<URLToken>, IURLTokenRepository
     {
-        private readonly DbContext _dbContext;
+        private readonly UrlShortenerDbContext _dbContext;
 
-        public URLTokenRepository(DbContext dbContext) : base(dbContext)
+        public URLTokenRepository(UrlShortenerDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }

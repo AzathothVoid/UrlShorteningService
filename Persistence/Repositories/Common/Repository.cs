@@ -5,10 +5,10 @@ namespace Persistence.Repositories.Common
 {
     public class Repository<T> : IRepository<T> where T : class
     {
-        private readonly DbContext _dbContext;
+        private readonly UrlShortenerDbContext _dbContext;
         private readonly DbSet<T> _dbSet;
 
-        public Repository(DbContext dbContext)
+        public Repository(UrlShortenerDbContext dbContext)
         {
             _dbContext = dbContext;
             _dbSet = _dbContext.Set<T>();

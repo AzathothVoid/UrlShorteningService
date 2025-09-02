@@ -1,7 +1,147 @@
 ﻿@page "/"
+@using Application.Contracts.Persistence
+@inject IURLTokenRepository URLTokenRepository
 
-<PageTitle>Home</PageTitle>
+<PageTitle>URL Shortener - Simplify Your Links</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+    <MudGrid Justify="Justify.Center" Spacing="6">
+        <MudItem xs="12" Class="d-flex justify-center">
+            <MudText Typo="Typo.h2" Align="Align.Center" Color="Color.Primary">URL Shortener</MudText>
+        </MudItem>
+        
+        <MudItem xs="12" Class="d-flex justify-center">
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Secondary" Class="mx-4">
+                Simplify your links with our fast and secure URL shortening service
+            </MudText>
+        </MudItem>
 
-Welcome to your new app.
+        <MudItem xs="12" sm="10" md="8">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudForm @ref="form" @bind-IsValid="@success">
+                    <MudTextField @bind-Value="longUrl" 
+                                T="string" 
+                                Label="Enter your long URL" 
+                                Variant="Variant.Outlined"
+                                Adornment="Adornment.End" 
+                                AdornmentIcon="@Icons.Material.Filled.Link"
+                                Required="true"
+                                RequiredError="Please enter a URL"
+                                Validation="@(new Func<string, string>(ValidateUrl))"
+                                Class="mt-3"/>
+                    
+                    <MudButton Variant="Variant.Filled" 
+                              Color="Color.Primary" 
+                              Size="Size.Large"
+                              OnClick="ShortenUrlAsync"
+                              Disabled="@(!success)"
+                              FullWidth="true" 
+                              Class="mt-4">
+                        Shorten URL
+                    </MudButton>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+
+        @if (!string.IsNullOrEmpty(shortUrl))
+        {
+            <MudItem xs="12" sm="10" md="8">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudTextField @bind-Value="shortUrl"
+                                Label="Your shortened URL"
+                                Variant="Variant.Outlined"
+                                ReadOnly="true"
+                                Adornment="Adornment.End"
+                                AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                                OnAdornmentClick="CopyToClipboard" />
+                </MudPaper>
+            </MudItem>
+        }
+
+        <MudItem xs="12" Class="d-flex justify-center mt-8">
+            <MudGrid Justify="Justify.Center" Spacing="6">
+                <MudItem xs="12" sm="4">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 100%;">
+                        <MudText Typo="Typo.h6" Align="Align.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Large" />
+                            <br />Fast
+                        </MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">
+                            Generate short URLs instantly with our optimized service
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 100%;">
+                        <MudText Typo="Typo.h6" Align="Align.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Large" />
+                            <br />Secure
+                        </MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">
+                            Your data is protected with enterprise-grade security
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 100%;">
+                        <MudText Typo="Typo.h6" Align="Align.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.Analytics" Size="Size.Large" />
+                            <br />Analytics
+                        </MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">
+                            Track your link performance with detailed analytics
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private string longUrl = "";
+    private string shortUrl = "";
+    private bool success;
+    private MudForm form;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; }
+
+    private string ValidateUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return "URL is required";
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uriResult) || 
+            !(uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+            return "Please enter a valid URL";
+
+        return null;
+    }
+
+    private async Task ShortenUrlAsync()
+    {
+        try
+        {
+            // TODO: Implement URL shortening logic using URLTokenRepository
+            // For now, just show a success message
+            shortUrl = $"https://shorturl.com/{Guid.NewGuid().ToString()[..8]}";
+            Snackbar.Add("URL shortened successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", shortUrl);
+        Snackbar.Add("Copied to clipboard!", Severity.Success);
+    }
+}
