@@ -1,49 +1,53 @@
 ﻿using Application.Contracts.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Persistence.Repositories.Common
 {
     public class Repository<T> : IRepository<T> where T : class
     {
         private readonly DbContext _dbContext;
+        private readonly DbSet<T> _dbSet;
 
         public Repository(DbContext dbContext)
         {
             _dbContext = dbContext;
-        }
-        public Task<T> AddAsync(T entity)
-        {
-            throw new NotImplementedException();
+            _dbSet = _dbContext.Set<T>();
         }
 
-        public Task DeleteAsync(T entity)
+        public async Task<T> AddAsync(T entity)
         {
-            throw new NotImplementedException();
+            await _dbSet.AddAsync(entity);
+            await _dbContext.SaveChangesAsync();
+            return entity;
         }
 
-        public Task<T> Exists(T entity)
+        public async Task DeleteAsync(T entity)
         {
-            throw new NotImplementedException();
+            _dbSet.Remove(entity);
+            await _dbContext.SaveChangesAsync();
         }
 
-        public Task<IReadOnlyList<T>> GetAllAsync()
+        public async Task<T> Exists(T entity)
         {
-            throw new NotImplementedException();
+            var exists = await _dbSet.ContainsAsync(entity);
+            return exists ? entity : null!;
         }
 
-        public Task<T?> GetByIdAsync(int id)
+        public async Task<IReadOnlyList<T>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _dbSet.ToListAsync();
         }
 
-        public Task<T> UpdateAsync(T entity)
+        public async Task<T?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _dbSet.FindAsync(id);
+        }
+
+        public async Task<T> UpdateAsync(T entity)
+        {
+            _dbSet.Update(entity);
+            await _dbContext.SaveChangesAsync();
+            return entity;
         }
     }
 }

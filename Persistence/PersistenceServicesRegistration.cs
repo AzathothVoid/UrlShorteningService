@@ -1,7 +1,10 @@
-﻿using Application.Contracts.Persistence.Common;
+﻿using Application.Contracts.Persistence;
+using Application.Contracts.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Persistence.Repositories;
+using Persistence.Repositories.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +21,8 @@ namespace Persistence
                 options.UseNpgsql(configuration.GetConnectionString("URLShortenerConnectionString"))
             );
 
-            services.AddScoped(typeof(IRepository<>), typeof(IRepository<>))
+            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddScoped<IURLTokenRepository, URLTokenRepository>();
 
             return services;
         }
