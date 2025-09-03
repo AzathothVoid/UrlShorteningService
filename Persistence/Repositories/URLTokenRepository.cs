@@ -41,5 +41,15 @@ namespace Persistence.Repositories
 
             return true;
         }
+
+        public async Task<int> UpdateTokenClick(URLToken entity)
+        {
+
+            entity.Clicks = entity.Clicks + 1;
+            _dbContext.Set<URLToken>().Update(entity);
+            await _dbContext.SaveChangesAsync();
+
+            return entity.Clicks;
+        }
     }
 }

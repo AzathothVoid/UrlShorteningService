@@ -27,7 +27,13 @@ namespace Application.Features.URLTokens.Handlers.Query
         {
             var response = new CustomQueryResponse<URLTokenDto>();
             var urlTokenDetail = await _urlTokenRepository.GetByTokenAsync(request.Token);
-
+            
+            if (urlTokenDetail == null)
+            {
+                response.Success = false;
+                response.Message = "Token not found";
+                return response;
+            }
             response.Success = true;
             response.Message = "GET Successful";
             response.Data = _mapper.Map<URLTokenDto>(urlTokenDetail);
