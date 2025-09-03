@@ -161,6 +161,7 @@
     {
         try
         {
+            shortUrls = await VisitRepo.ListURLTokensAsync(200);
             totalClicks = await VisitRepo.GetTotalVisitsAsync(selectedShortUrlId);
             uniqueVisitors = await VisitRepo.GetUniqueVisitorsByIpAsync(selectedShortUrlId);
 
@@ -231,18 +232,17 @@
 
     async Task ExportCsv()
     {
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine("date,count");
-        foreach (var d in daily)
-            sb.AppendLine($"{d.date:yyyy-MM-dd},{d.count}");
-
-        var byteArray = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
-        var base64 = Convert.ToBase64String(byteArray);
-        var url = $"data:text/csv;base64,{base64}";
-      
         try
         {
-            await JS.InvokeVoidAsync("open", url, "_blank");
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("date,count");
+            foreach (var d in daily)
+                sb.AppendLine($"{d.date:yyyy-MM-dd},{d.count}");
+
+            var csvContent = sb.ToString();
+            var fileName = $"analytics-{DateTime.Now:yyyyMMddHHmmss}.csv";
+
+            await JS.InvokeVoidAsync("downloadCSV", fileName, Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(csvContent)));
         }
         catch (Exception ex)
         {

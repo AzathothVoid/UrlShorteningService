@@ -19,7 +19,7 @@ namespace Persistence
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IURLTokenRepository, URLTokenRepository>();
-            services.AddSingleton<IVisitRepository, VisitRepository>();
+            services.AddScoped<IVisitRepository, VisitRepository>();
 
             return services;
         }

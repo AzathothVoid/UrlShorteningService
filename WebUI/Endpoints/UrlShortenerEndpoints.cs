@@ -33,6 +33,15 @@ namespace WebUI.Endpoints
 
                 await mediator.Send(new UpdateClickURLTokenCommand { Token = token });
 
+                var deviceType = clientInfo.Device.Family;
+                if (deviceType == "Other")
+                {
+                    if (clientInfo.OS.Family.Contains("Android") || clientInfo.OS.Family.Contains("iOS"))
+                        deviceType = "Mobile";
+                    else if (clientInfo.OS.Family.Contains("Windows") || clientInfo.OS.Family.Contains("Mac") || clientInfo.OS.Family.Contains("Linux"))
+                        deviceType = "Desktop";
+                }
+
                 var evt = new VisitEvent
                 {
                     URLTokenId = resp.Data.Id,
@@ -40,7 +49,7 @@ namespace WebUI.Endpoints
                     IpAddress = ctx.Connection.RemoteIpAddress?.ToString(),
                     UserAgent = ctx.Request.Headers["User-Agent"].FirstOrDefault(),
                     Referrer = ctx.Request.Headers["Referer"].FirstOrDefault(),
-                    DeviceType = clientInfo.Device.Family,
+                    DeviceType = deviceType,
                     Browser = clientInfo.UA.Family,
                     IsBot = clientInfo.UA.Family.ToLower().Contains("bot") || clientInfo.UA.Family.ToLower().Contains("spider") || clientInfo.UA.Family.ToLower().Contains("crawl") || clientInfo.Device.IsSpider
                 };
