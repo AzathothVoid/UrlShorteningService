@@ -1,0 +1,253 @@
+﻿@page "/admin/analytics"
+@inject IVisitRepository VisitRepo
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-6 mx-4">
+    <MudThemeProvider />
+    <MudPopoverProvider />
+    <MudDialogProvider /> 
+    <MudSnackbarProvider />
+
+    <MudText Typo="Typo.h4" Class="mb-4">Analytics Dashboard</MudText>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="4">
+                <MudSelect T="int?" Label="Select short URL (or All)" @bind-Value="selectedShortUrlId" Dense="true">
+                    <MudSelectItem T="int?" Value="null">All URLs</MudSelectItem>
+                    @foreach(var s in shortUrls)
+                    {
+                        <MudSelectItem T="int?" Value="@s.id">@s.token</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@LoadAnalytics" Class="ml-2">Refresh</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@ExportCsv" Class="ml-2">Export CSV</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudGrid Class="mb-4" Spacing="3">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2">Total Clicks</MudText>
+                <MudText Typo="Typo.h5">@totalClicks</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Across selected scope</MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2">Unique Visitors</MudText>
+                <MudText Typo="Typo.h5">@uniqueVisitors</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">By IP (approx)</MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2">Avg / day (14d)</MudText>
+                <MudText Typo="Typo.h5">@avgPerDay</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Last 14 days</MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2">Recent Visits</MudText>
+                <MudText Typo="Typo.h5">@recentVisitsCount</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Last @recentLimit visits</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Spacing="3" Class="mb-4">
+        <MudItem xs="12" md="8">
+            <MudPaper Class="pa-3" Style="height:360px;">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Daily Visits (last @days days)</MudText>
+                <div class="chart-container" style="height:300px;">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-3" Style="height:360px;">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Device Breakdown</MudText>
+                <div style="height:210px;">
+                    <canvas id="deviceChart"></canvas>
+                </div>
+                <MudDivider Class="my-2" />
+                <MudText Typo="Typo.subtitle2">Top Referrers</MudText>
+                <MudList Dense="true" T="string" Class="pa-1">
+                    @if(topReferrers?.Any() ?? false)
+                    {
+                        @foreach(var r in topReferrers)
+                        {
+                            <MudListItem T="string">@($"{r.referrer}  — {r.count}")</MudListItem>
+                        }
+                    }
+                    else
+                    {
+                        <MudListItem T="string">No referrers</MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="pa-3">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">Recent Visits</MudText>
+
+        <MudTable Items="recentVisits" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>Time</MudTh>
+                <MudTh>IP</MudTh>
+                <MudTh>User Agent</MudTh>
+                <MudTh>Referrer</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
+                <MudTd>@context.ip</MudTd>
+                <MudTd>@(context.ua?.Length > 80 ? context.ua.Substring(0,80) + "…" : context.ua)</MudTd>
+                <MudTd>@(string.IsNullOrEmpty(context.referrer) ? "-" : context.referrer)</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+@code {
+    int? selectedShortUrlId = null;
+    int days = 30;
+    int recentLimit = 20;
+
+    long totalClicks = 0;
+    long uniqueVisitors = 0;
+    int avgPerDay = 0;
+    int recentVisitsCount = 0;
+
+    List<(DateTimeOffset date, int count)> daily = new();
+    List<(string referrer, int count)> topReferrers = new();
+    List<(string label, int count)> deviceBreakdown = new();
+    List<(string label, int count)> browserBreakdown = new();
+    List<(DateTime timestamp, string ip, string ua, string referrer)> recentVisits = new();
+    List<(int id, string token)> shortUrls = new();
+
+    bool _chartsNeedsRender = false;
+    string[] _dailyLabels = Array.Empty<string>();
+    double[] _dailyData = Array.Empty<double>();
+    string[] _deviceLabels = Array.Empty<string>();
+    double[] _deviceData = Array.Empty<double>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            shortUrls = await VisitRepo.ListURLTokensAsync(200);
+        }
+        catch
+        {
+            shortUrls = new List<(int, string)>();
+        }
+
+        await LoadAnalytics();
+    }
+
+    async Task LoadAnalytics()
+    {
+        try
+        {
+            totalClicks = await VisitRepo.GetTotalVisitsAsync(selectedShortUrlId);
+            uniqueVisitors = await VisitRepo.GetUniqueVisitorsByIpAsync(selectedShortUrlId);
+
+            daily = await VisitRepo.GetDailyCountsAsync(selectedShortUrlId, days);
+            topReferrers = (await VisitRepo.GetTopReferrersAsync(selectedShortUrlId, 8)).ToList();
+            deviceBreakdown = await VisitRepo.GetDeviceBreakdownAsync(selectedShortUrlId);
+            browserBreakdown = await VisitRepo.GetBrowserBreakdownAsync(selectedShortUrlId);
+            recentVisits = await VisitRepo.GetRecentVisitsAsync(selectedShortUrlId, recentLimit);
+
+            recentVisitsCount = recentVisits?.Count ?? 0;
+            avgPerDay = (int)Math.Round(daily.Any() ? daily.Average(d => d.count) : 0);
+
+            _dailyLabels = daily.Select(d => d.date.ToString("MM-dd")).ToArray();
+            _dailyData = daily.Select(d => (double)d.count).ToArray();
+
+            _deviceLabels = deviceBreakdown.Select(x => x.label).ToArray();
+            _deviceData = deviceBreakdown.Select(x => (double)x.count).ToArray();
+         
+            _chartsNeedsRender = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error loading analytics: " + ex.Message, Severity.Error);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_chartsNeedsRender)
+        {
+            try
+            {
+                if (_dailyLabels.Length > 0 && _dailyData.Length > 0)
+                {
+                    await JS.InvokeVoidAsync("createLineChart", "dailyChart", _dailyLabels, _dailyData, $"Visits ({days} days)");
+                }
+                else
+                {
+                    
+                    await JS.InvokeVoidAsync("createLineChart", "dailyChart", _dailyLabels, _dailyData, $"Visits ({days} days)");
+                }
+
+                if (_deviceLabels.Length > 0 && _deviceData.Length > 0)
+                {
+                    await JS.InvokeVoidAsync("createDonutChart", "deviceChart", _deviceLabels, _deviceData, "Device");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("createDonutChart", "deviceChart", _deviceLabels, _deviceData, "Device");
+                }
+
+             
+                Snackbar.Add("Analytics refreshed", Severity.Success);
+                _chartsNeedsRender = false;
+
+                StateHasChanged();
+            }
+            catch (InvalidOperationException)
+            {
+            }          
+            catch (Exception ex)
+            {               
+                Snackbar.Add("Error rendering charts: " + ex.Message, Severity.Error);
+                _chartsNeedsRender = false;
+            }     
+        }   
+    }
+
+    async Task ExportCsv()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("date,count");
+        foreach (var d in daily)
+            sb.AppendLine($"{d.date:yyyy-MM-dd},{d.count}");
+
+        var byteArray = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(byteArray);
+        var url = $"data:text/csv;base64,{base64}";
+      
+        try
+        {
+            await JS.InvokeVoidAsync("open", url, "_blank");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Cannot export CSV: " + ex.Message, Severity.Error);
+        }
+    }
+}
+

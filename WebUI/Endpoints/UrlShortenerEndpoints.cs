@@ -1,8 +1,9 @@
-﻿using Application.Features.URLTokens.Requests.Command;
+﻿using Application.Contracts.Infrastructure;
+using Application.Features.URLTokens.Requests.Command;
 using Application.Features.URLTokens.Requests.Query;
 using Application.Models.Visit;
 using MediatR;
-using Persistence;
+using UAParser;
 
 namespace WebUI.Endpoints
 {
@@ -22,6 +23,8 @@ namespace WebUI.Endpoints
                     return Results.Redirect($"/invalid?token={encoded}");
                 }
 
+                var clientInfo = Parser.GetDefault().Parse(ctx.Request.Headers["User-Agent"].FirstOrDefault() ?? "");
+
                 if (resp.Data.ExpiresAt.HasValue && resp.Data.ExpiresAt.Value < DateTime.UtcNow)
                 {
                     var encoded = Uri.EscapeDataString(token ?? "");
@@ -36,8 +39,12 @@ namespace WebUI.Endpoints
                     Timestamp = DateTimeOffset.UtcNow,
                     IpAddress = ctx.Connection.RemoteIpAddress?.ToString(),
                     UserAgent = ctx.Request.Headers["User-Agent"].FirstOrDefault(),
-                    Referrer = ctx.Request.Headers["Referer"].FirstOrDefault()
+                    Referrer = ctx.Request.Headers["Referer"].FirstOrDefault(),
+                    DeviceType = clientInfo.Device.Family,
+                    Browser = clientInfo.UA.Family,
+                    IsBot = clientInfo.UA.Family.ToLower().Contains("bot") || clientInfo.UA.Family.ToLower().Contains("spider") || clientInfo.UA.Family.ToLower().Contains("crawl") || clientInfo.Device.IsSpider
                 };
+
                 await queue.EnqueueAsync(evt); // non-blocking
 
                 return Results.Redirect(resp?.Data?.OriginalUrl);

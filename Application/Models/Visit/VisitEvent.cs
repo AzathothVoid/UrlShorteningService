@@ -13,5 +13,9 @@ namespace Application.Models.Visit
         public string? IpAddress { get; set; }
         public string? UserAgent { get; set; }
         public string? Referrer { get; set; }
+        public string? Country { get; set; }
+        public string? DeviceType { get; set; }
+        public string? Browser { get; set; }
+        public bool IsBot { get; set; } = false;
     }
 }

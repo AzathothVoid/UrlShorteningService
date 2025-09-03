@@ -4,17 +4,18 @@ using Microsoft.Extensions.Logging;
 using Domain.Entities;
 using Application.Contracts.Persistence;
 using AutoMapper;
+using Application.Contracts.Infrastructure;
 
 namespace Infrastructure.Services
 {
     public class VisitWriterService : BackgroundService
     {
         private readonly IServiceProvider _sp;
-        private readonly VisitQueue _queue;
+        private readonly IVisitQueue _queue;
         private readonly ILogger<VisitWriterService> _logger;
         private readonly IMapper _mapper;
 
-        public VisitWriterService(VisitQueue queue, IServiceProvider sp, ILogger<VisitWriterService> logger, IMapper mapper)
+        public VisitWriterService(IVisitQueue queue, IServiceProvider sp, ILogger<VisitWriterService> logger, IMapper mapper)
         {
             _queue = queue;
             _sp = sp;
