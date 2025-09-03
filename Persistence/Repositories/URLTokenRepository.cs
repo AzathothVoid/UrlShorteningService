@@ -26,6 +26,12 @@ namespace Persistence.Repositories
                 .AnyAsync(t => t.Token == token);
         }
 
+        public async Task<bool> TokenExistsAsync(string token)
+        {
+            return await _dbContext.Set<URLToken>()
+                .AnyAsync(t => t.Token == token);
+        }
+
         public async Task<bool> IsUrlValid(URLToken urlToken)
         {
             if (urlToken == null)

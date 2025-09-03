@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Persistence;
+﻿using Application.Contracts.Infrastructure;
+using Application.Contracts.Persistence;
 using Application.DTOs.URLToken.Validators;
 using Application.Features.URLTokens.Requests.Command;
 using Application.Responses;
@@ -19,7 +20,7 @@ namespace Application.Features.URLTokens.Handlers.Command
         private readonly IURLTokenRepository _urlTokenRepository;
         private readonly IMapper _mapper;
 
-        public CreateURLTokenCommandHandler(IURLTokenRepository urlTokenRepository, IMapper mapper
+        public CreateURLTokenCommandHandler(IURLTokenRepository urlTokenRepository,IURLTokenService urlTokenService ,IMapper mapper
             )
         {
             _urlTokenRepository = urlTokenRepository;

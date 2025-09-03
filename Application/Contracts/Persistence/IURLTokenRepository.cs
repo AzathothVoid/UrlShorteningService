@@ -13,5 +13,6 @@ namespace Application.Contracts.Persistence
         Task<URLToken?> GetByTokenAsync(string token);
         Task<bool> IsTokenUniqueAsync(string token);
         Task<bool> IsUrlValid(URLToken urlToken);
+        Task<bool> TokenExistsAsync(string token);
     }
 }

@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using Application.Contracts.Persistence
-@inject IURLTokenRepository URLTokenRepository
+@inject IURLTokenService URLTokenService
+@inject IMediator Mediator
+@rendermode InteractiveServer
 
 <PageTitle>URL Shortener - Simplify Your Links</PageTitle>
 
@@ -128,9 +130,9 @@
     {
         try
         {
-            // TODO: Implement URL shortening logic using URLTokenRepository
-            // For now, just show a success message
-            shortUrl = $"https://shorturl.com/{Guid.NewGuid().ToString()[..8]}";
+            var entity = await URLTokenService.CreateShortUrlAsync(longUrl);
+            var response = await Mediator.Send(new CreateURLTokenCommand { UrlTokenDto = entity });
+            shortUrl = $"https://shorturl.com/r/{entity.Token}";
             Snackbar.Add("URL shortened successfully!", Severity.Success);
         }
         catch (Exception ex)
