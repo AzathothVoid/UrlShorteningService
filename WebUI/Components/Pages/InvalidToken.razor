@@ -1,0 +1,89 @@
+﻿@page "/invalid"
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mx-auto mt-10">
+    <MudPaper Elevation="8" Class="pa-6">
+        <MudGrid Justify="Justify.Center" AlignItems="Center" Spacing="3">
+            <MudItem xs="12" class="d-flex justify-center mt-1 mb-1">
+                <MudAvatar Icon="@Icons.Material.Filled.LinkOff" Size="Size.Large" Color="Color.Error" />
+            </MudItem>
+
+            <MudItem xs="12" class="pt-1 pb-1">
+                <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true" Class="mt-1 mb-1">
+                    Short link not found
+                </MudText>
+
+                <MudText Typo="Typo.subtitle2" Align="Align.Center" Class="mt-0 mb-2">
+                    The short link
+                    <MudText Inline="true" Color="Color.Primary" Class="mx-1">@token</MudText>
+                    is invalid or has expired.
+                </MudText>
+            </MudItem>
+
+            <MudItem xs="12" class="pt-1 pb-1">
+                <MudDivider Class="my-2" />
+                <MudText Align="Align.Center" Typo="Typo.body2" Class="mb-2 mt-1">Possible reasons</MudText>
+
+                <MudList Dense="true" T="string" Class="pa-2">
+                    <MudListItem Text="Token was mistyped or has been modified" />
+                    <MudListItem Text="Token expired or was deleted" />
+                    <MudListItem Text="Short URL was never created" />
+                </MudList>
+            </MudItem>
+ 
+            <MudItem xs="12" class="d-flex justify-center mt-3 mb-1">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GoHome" Class="mr-2">Go home</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Class="mx-2" OnClick="ShortenAgain">Shorten a URL</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" Class="ml-2" OnClick="Report">Report</MudButton>
+            </MudItem>
+
+            <MudItem xs="12" class="pt-2">
+                <MudText Typo="Typo.caption" Align="Align.Center" Class="mt-2">
+                    If you believe this is an error, <MudLink Href="@mailto">contact support</MudLink>.
+                </MudText>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string token = "(unknown)";
+    private string reason = "";
+    private string mailto => $"mailto:support@example.com?subject=Invalid%20Short%20URL&body=Token:%20{Uri.EscapeDataString(token)}";
+
+    protected override void OnInitialized()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("token", out var t)) token = t!;
+        if (query.TryGetValue("reason", out var r)) reason = r!;
+
+        if (!string.IsNullOrWhiteSpace(reason))
+        {
+            Snackbar.Add(reason switch {
+                "expired" => "This link has expired.",
+                _ => "This link is invalid."
+            }, Severity.Warning);
+        }
+    }
+
+    private async Task GoHome()
+    {
+        Console.WriteLine("Navigating home...");
+        Nav.NavigateTo("/");
+    }
+
+    private async Task ShortenAgain()
+    {
+        Nav.NavigateTo("/"); 
+    }
+
+    private async Task Report()
+    {
+        Nav.NavigateTo($"/contact?token={Uri.EscapeDataString(token)}");
+        Snackbar.Add("Thanks — a support request has been created (simulated).", Severity.Info);
+    }
+}

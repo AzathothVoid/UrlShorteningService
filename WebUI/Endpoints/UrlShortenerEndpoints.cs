@@ -14,8 +14,17 @@ namespace WebUI.Endpoints
             {
                 var resp = await mediator.Send(new GetURLTokenDetailByTokenQuery { Token = token });
 
-                if (resp == null || resp.Success == false)
-                    throw new Exception();
+                if (resp == null || resp.Success == false || resp.Data == null)
+                {               
+                    var encoded = Uri.EscapeDataString(token ?? "");
+                    return Results.Redirect($"/invalid?token={encoded}");
+                }
+
+                if (resp.Data.ExpiresAt.HasValue && resp.Data.ExpiresAt.Value < DateTime.UtcNow)
+                {
+                    var encoded = Uri.EscapeDataString(token ?? "");
+                    return Results.Redirect($"/invalid?token={encoded}&reason=expired");
+                }
 
                 return Results.Redirect(resp?.Data?.OriginalUrl);
             });
