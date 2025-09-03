@@ -11,7 +11,7 @@ namespace Application.DTOs.URLToken
     {
         public string Token { get; set; } = null!;
         public string OriginalUrl { get; set; } = null!;
-        public int Clicks { get; set; } = 0;
+        public int Clicks { get; set; }
         public DateTime? ExpiresAt { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Application.Features.URLTokens.Requests.Query;
+using MediatR;
 using Persistence;
 
 namespace WebUI.Endpoints
@@ -9,11 +10,14 @@ namespace WebUI.Endpoints
         {
             var group = app.MapGroup("");
 
-            group.MapGet("/r/{token}", async (string token, UrlShortenerDbContext db, HttpContext ctx) =>
+            group.MapGet("/r/{token}", async (string token, IMediator mediator, HttpContext ctx) =>
             {
-                
+                var resp = await mediator.Send(new GetURLTokenDetailByTokenQuery { Token = token });
 
-                return Results.Redirect(entity.OriginalUrl);
+                if (resp == null || resp.Success == false)
+                    throw new Exception();
+
+                return Results.Redirect(resp?.Data?.OriginalUrl);
             });
 
             return app;

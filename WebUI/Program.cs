@@ -3,6 +3,7 @@ using Application;
 using Persistence;
 using Infrastructure;
 using MudBlazor.Services;
+using WebUI.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,13 +30,10 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
+app.MapUrlShortenerEndpoints();
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-app.MapGet("/r/{token}", () => {
-
-    Results.Redirect("/urlshortener");
-});
 
 app.Run();

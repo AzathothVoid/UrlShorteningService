@@ -9,7 +9,8 @@ namespace Application.DTOs.URLToken
 {
     public class UpdateURLTokenDto : IURLTokenDto
     {
-        public string OriginalUrl { get; set; } = null!;
+        public string? OriginalUrl { get; set; }
+        public int? Clicks { get; set; }
         public DateTime? ExpiresAt { get; set; }
     }
 }
