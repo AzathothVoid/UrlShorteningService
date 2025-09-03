@@ -36,5 +36,6 @@ namespace Persistence
         }
 
         public DbSet<URLToken> URLTokens { get; set; }
+        public DbSet<Visit> Visits { get; set; }
     }
 }

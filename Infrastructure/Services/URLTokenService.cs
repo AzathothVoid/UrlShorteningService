@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Infrastructure
+namespace Infrastructure.Services
 {
     public class URLTokenService : IURLTokenService
     {
@@ -39,7 +39,7 @@ namespace Infrastructure
 
         private string GenerateRandomToken(int length)
         {
-            var sb = new System.Text.StringBuilder(length);
+            var sb = new StringBuilder(length);
             for (int i = 0; i < length; i++)
                 sb.Append(_alphabet[_rng.Next(_alphabet.Length)]);
             return sb.ToString();

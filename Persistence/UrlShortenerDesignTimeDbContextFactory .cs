@@ -9,16 +9,14 @@ namespace Persistence
     {
         public UrlShortenerDbContext CreateDbContext(string[] args)
         {
-            var basePath = Directory.GetCurrentDirectory(); 
+            var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../WebUI");
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: true)
                 .Build();
 
-        
-            var conn = configuration.GetConnectionString("URLShortenerConnectionString")
-                       ?? Environment.GetEnvironmentVariable("URLSHORTENER_CONN")
-                       ?? "Host=localhost;Database=urlshortener;Username=postgres;Password=postgres";
+
+            var conn = configuration.GetConnectionString("URLShortenerConnectionString");                 
 
             var optionsBuilder = new DbContextOptionsBuilder<UrlShortenerDbContext>();
 

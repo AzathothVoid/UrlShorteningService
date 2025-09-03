@@ -1,4 +1,5 @@
 ﻿using Application.Contracts.Infrastructure;
+using Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,9 @@ namespace Infrastructure
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
         {
             services.AddScoped<IURLTokenService, URLTokenService>();
+            services.AddSingleton<IVisitQueue, VisitQueue>();
+            services.AddHostedService<VisitWriterService>();
+
             return services;
         }
     }

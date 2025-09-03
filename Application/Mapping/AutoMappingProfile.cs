@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Models.Visit;
 
 namespace Application.Mapping
 {
@@ -16,6 +17,7 @@ namespace Application.Mapping
             CreateMap<URLToken, URLTokenDto>().ReverseMap();
             CreateMap<URLToken, CreateURLTokenDto>().ReverseMap();
             CreateMap<URLToken, UpdateURLTokenDto>().ReverseMap();
+            CreateMap<Visit, VisitEvent>().ReverseMap();
         }
     }
 }

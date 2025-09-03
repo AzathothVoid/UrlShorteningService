@@ -1,5 +1,6 @@
 ﻿using Application.Features.URLTokens.Requests.Command;
 using Application.Features.URLTokens.Requests.Query;
+using Application.Models.Visit;
 using MediatR;
 using Persistence;
 
@@ -11,16 +12,10 @@ namespace WebUI.Endpoints
         {
             var group = app.MapGroup("");
 
-            group.MapGet("/r/{token}", async (string token, IMediator mediator, HttpContext ctx) =>
+            group.MapGet("/r/{token}", async (string token, IMediator mediator, HttpContext ctx, IVisitQueue queue) =>
             {
-                Console.WriteLine($"Token is: {token}");
-
                 var resp = await mediator.Send(new GetURLTokenDetailByTokenQuery { Token = token });
-
-                Console.WriteLine($"Response: {resp}");
-                Console.WriteLine($"Response Data: {resp.Data}");
-                Console.WriteLine($"Response Success: {resp.Success}");
-
+       
                 if (resp == null || resp.Success == false || resp.Data == null)
                 {               
                     var encoded = Uri.EscapeDataString(token ?? "");
@@ -34,6 +29,16 @@ namespace WebUI.Endpoints
                 }
 
                 await mediator.Send(new UpdateClickURLTokenCommand { Token = token });
+
+                var evt = new VisitEvent
+                {
+                    URLTokenId = resp.Data.Id,
+                    Timestamp = DateTimeOffset.UtcNow,
+                    IpAddress = ctx.Connection.RemoteIpAddress?.ToString(),
+                    UserAgent = ctx.Request.Headers["User-Agent"].FirstOrDefault(),
+                    Referrer = ctx.Request.Headers["Referer"].FirstOrDefault()
+                };
+                await queue.EnqueueAsync(evt); // non-blocking
 
                 return Results.Redirect(resp?.Data?.OriginalUrl);
             });
