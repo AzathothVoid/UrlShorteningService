@@ -40,26 +40,27 @@ namespace Persistence.Repositories
         public async Task<List<(DateTimeOffset date, int count)>> GetDailyCountsAsync(int URLTokenId, int days = 30)
         {
             var from = DateTimeOffset.UtcNow.AddDays(-days);
-            return await _dbSet
+            var result = await _dbSet
                 .Where(v => v.URLTokenId == URLTokenId && v.Timestamp >= from)
                 .GroupBy(v => v.Timestamp.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .Select(g => new { Date = new DateTimeOffset(g.Key, TimeSpan.Zero), Count = g.Count() })
                 .OrderBy(x => x.Date)
-                .Select(x => (date: x.Date, count: x.Count))
                 .ToListAsync();
+
+            return result.Select(x => (date: x.Date, count: x.Count)).ToList();
         }
 
-        // Top referrers
         public async Task<List<(string Referrer, int Count)>> GetTopReferrersAsync(int URLTokenId, int topN = 10)
         {
-            return await _dbSet
+            var result = await _dbSet
                 .Where(v => v.URLTokenId == URLTokenId && !string.IsNullOrEmpty(v.Referrer))
                 .GroupBy(v => v.Referrer)
                 .Select(g => new { Referrer = g.Key!, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .Take(topN)
-                .Select(x => (x.Referrer, x.Count))
                 .ToListAsync();
+
+            return result.Select(x => (x.Referrer, x.Count)).ToList();
         }
 
     }
